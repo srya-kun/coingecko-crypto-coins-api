@@ -51,16 +51,16 @@ The script requires a configuration file named `config.json` in the same directo
 To run the script, use the following command:
 
 ```bash
-python coingecko_data_script/main.py <coin_id1> <coin_id2> ...
+python main.py <coin_id1> <coin_id2> ... <currency1> <currency2> ...
 ```
 
-Replace `<coin_id1>`, `<coin_id2>`, etc. with the CoinGecko coin IDs for which you want to retrieve data. For example:
+Replace `<coin_id1>`, `<coin_id2>`, etc. with the CoinGecko coin IDs for which you want to retrieve data, and `<currency1>`, `<currency2>`, etc. with the currencies you want to use. For example:
 
 ```bash
-python coingecko_data_script/main.py bitcoin ethereum
+python main.py bitcoin ethereum usd eur
 ```
 
-This will create an Excel file named `coingecko_data_<today_date>.xlsx` in the same directory as the script, with a sheet for each coin containing the current market data.
+This will create an Excel file named `coingecko_data_<today_date>.xlsx` in the same directory as the script, with a sheet for each coin and currency combination containing the current market data.
 
 ## Error Handling
 

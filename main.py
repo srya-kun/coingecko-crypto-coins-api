@@ -28,25 +28,24 @@ def load_config() -> Dict[str, Any]:
         print(f"Error: Invalid JSON in {CONFIG_FILE}. Please check the file.")
         exit()
 
-def fetch_coin_data(coin_ids: List[str], config: Dict[str, Any]) -> List[Dict[str, Any]]:
+def fetch_coin_data(coin_ids: List[str], config: Dict[str, Any], vs_currency: str = "usd") -> List[Dict[str, Any]]:
     """Fetches current market data for the specified coin IDs from the CoinGecko API."""
     api_url = "https://api.coingecko.com/api/v3/coins/markets"
-    vs_currency = "usd"
     all_data = []
-    
+
     for coin_id in coin_ids:
         # Check cache first
-        cache_file = f".cache/{coin_id}.json"
+        cache_file = f".cache/{coin_id}_{vs_currency}.json"
         if os.path.exists(cache_file):
             modified_time = os.path.getmtime(cache_file)
             if (datetime.now().timestamp() - modified_time) < config["cache_expiry"]:
-                print(f"Loading {coin_id} data from cache...")
+                print(f"Loading {coin_id} data from cache for {vs_currency}...")
                 with open(cache_file, "r") as f:
                     data = json.load(f)
                 all_data.append(data)
                 continue
 
-        print(f"Fetching {coin_id} data from CoinGecko API...")
+        print(f"Fetching {coin_id} data from CoinGecko API for {vs_currency}...")
         params = {
             "vs_currency": vs_currency,
             "ids": coin_id,
@@ -74,14 +73,14 @@ def fetch_coin_data(coin_ids: List[str], config: Dict[str, Any]) -> List[Dict[st
                     json.dump(data[0], f, indent=4)
                 all_data.append(data[0])
             else:
-                print(f"No data found for coin ID: {coin_id}")
+                print(f"No data found for coin ID: {coin_id} and currency {vs_currency}")
         except requests.exceptions.RequestException as e:
-            print(f"API request failed for {coin_id}: {e}")
+            print(f"API request failed for {coin_id} and currency {vs_currency}: {e}")
         except ValueError as e:
-            print(f"Data validation error for {coin_id}: {e}")
+            print(f"Data validation error for {coin_id} and currency {vs_currency}: {e}")
         except Exception as e:
-            print(f"An unexpected error occurred for {coin_id}: {e}")
-            
+            print(f"An unexpected error occurred for {coin_id} and currency {vs_currency}: {e}")
+
     return all_data
 
 def transform_data(coin_data: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -95,35 +94,39 @@ def transform_data(coin_data: List[Dict[str, Any]]) -> pd.DataFrame:
     return df
 
 def write_to_excel(data: Dict[str, pd.DataFrame]) -> None:
-    """Writes the data to an Excel file with a sheet for each coin."""
+    """Writes the data to an Excel file with a sheet for each coin and currency."""
     today_date = datetime.now().strftime("%d-%m-%Y")
     output_file = f"coingecko_data_{today_date}.xlsx"
-    
+
     with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
-        for coin_id, df in data.items():
-            df.to_excel(writer, sheet_name=coin_id if len(data) == 1 else today_date, index=False)
+        for sheet_name, df in data.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
     print(f"Data written to {output_file}")
 
 def main():
     """Main function to fetch coin data and write it to an Excel file."""
     parser = argparse.ArgumentParser(description="Fetch CoinGecko data and store it in an Excel file.")
     parser.add_argument("coin_ids", nargs="+", help="List of coin IDs (e.g., bitcoin ethereum).")
+    parser.add_argument("currencies", nargs="+", help="List of currencies (e.g., usd eur).")
     args = parser.parse_args()
     coin_ids = args.coin_ids
+    currencies = args.currencies
 
     config = load_config()
 
-    coin_data = fetch_coin_data(coin_ids, config)
-    
-    if not coin_data:
-        print("No data fetched. Please check the coin IDs and API key.")
+    coin_data = {}
+    for currency in currencies:
+        coin_data[currency] = fetch_coin_data(coin_ids, config, currency)
+
+    if not any(coin_data.values()):
+        print("No data fetched. Please check the coin IDs, currencies, and API key.")
         return
 
-    # Create a dictionary to hold dataframes for each coin
+    # Create a dictionary to hold dataframes for each coin and currency
     dfs = {}
-    for data in coin_data:
-        df = transform_data([data])  # transform_data expects a list of dictionaries
-        dfs[data['id']] = df
+    for currency, data_list in coin_data.items():
+        for data in data_list:
+            df = transform_data([data])  # transform_data expects a list of dictionaries
+            dfs[f"{data['id']}_{currency}"] = df
 
     write_to_excel(dfs)
-
