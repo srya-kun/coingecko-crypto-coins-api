@@ -1,4 +1,4 @@
-# coingecko-crypto-coins-api
+# CoinGecko Data Extraction Script
 
 ## Overview
 
@@ -79,17 +79,3 @@ The script includes a `transform_data` function that can be used to clean and pr
 *   Converts the `total_volume` column to a float and renames it to `volume`.
 
 You can modify this function to perform additional data transformations as needed.
-
-## Senior Developer Notes
-
-As a seasoned developer, I've incorporated several best practices into this script to ensure its reliability, maintainability, and scalability. These include:
-
-*   **Modularity:** The script is divided into several functions, each responsible for a specific task. This makes the code easier to understand, test, and maintain.
-*   **Type Hinting:** The script uses type hinting to improve code readability and prevent type-related errors.
-*   **Docstrings:** The script includes detailed docstrings for all functions and classes, explaining their purpose, parameters, and return values.
-*   **Error Handling:** The script includes comprehensive error handling to gracefully handle potential issues and prevent the script from crashing.
-*   **Caching:** The script implements caching to reduce API usage and improve performance.
-*   **Configuration File:** The script uses a configuration file to store sensitive information and make it easier to modify the script's behavior without having to edit the code directly.
-*   **Command-Line Arguments:** The script uses command-line arguments to allow users to specify the coin IDs for which they want to retrieve data.
-
-By following these best practices, I've created a script that is not only functional but also easy to understand, maintain, and extend. This script is a valuable tool for anyone who needs to extract cryptocurrency market data from the CoinGecko API.
